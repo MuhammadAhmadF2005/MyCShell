@@ -1,0 +1,47 @@
+# Compiled object files
+*.o
+
+# Executable output
+mysh
+
+# Build artefacts
+*.out
+*.a
+*.so
+*.so.*
+
+# Debug information
+*.dSYM/
+*.pdb
+
+# GDB/Valgrind artefacts
+vgcore.*
+core
+core.*
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Test artefacts
+test_suite.sh
+*.test
+
+# CMake (if switched later)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+
+# Dependency files
+*.d
