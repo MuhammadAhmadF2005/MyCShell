@@ -3,7 +3,7 @@
 **Course:** CS311 — Operating Systems  
 **Institution:** Faculty of Computer Science and Engineering, GIKI  
 **Semester:** Fall 2026  
-**Student ID:** 2034335  
+**Student ID:** 2024335  
 
 ---
 
@@ -31,18 +31,20 @@ This repository contains the implementation of **mysh** (MY SHell), a minimal Un
 ## File Structure
 
 ```
-CS311_A01_2034335_main.c       Entry point and REPL loop
-CS311_A01_2034335_shell.c      Command and pipeline execution
-CS311_A01_2034335_shell.h
-CS311_A01_2034335_parser.c     Input tokenizer and command parser
-CS311_A01_2034335_parser.h
-CS311_A01_2034335_builtins.c   Built-in command implementations
-CS311_A01_2034335_builtins.h
-CS311_A01_2034335_process.c    Background process table management
-CS311_A01_2034335_process.h
-CS311_A01_2034335_linenoise.c  Self-contained linenoise line editor
-CS311_A01_2034335_linenoise.h
-Makefile
+main.c          Entry point, welcome banner, and REPL loop
+shell.c         Command and pipeline execution
+shell.h
+parser.c        Input tokenizer and command parser
+parser.h
+builtins.c      Built-in command implementations (cd, pwd, ps, kill, exit)
+builtins.h
+process.c       Background process table management
+process.h
+linenoise.c     Self-contained linenoise line editor and history
+linenoise.h
+Makefile        Build script with clean and all targets
+README.md       Project documentation
+.gitignore      Git ignore specifications
 ```
 
 ---
