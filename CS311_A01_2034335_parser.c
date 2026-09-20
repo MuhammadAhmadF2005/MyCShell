@@ -22,6 +22,7 @@ void parsed_line_init(ParsedLine *line)
     memset(line, 0, sizeof(*line));
 }
 
+// Free dynamic memory allocated for command arguments and redirect filenames
 void parsed_line_destroy(ParsedLine *line)
 {
     int i;
@@ -125,6 +126,7 @@ int parse_line(const char *input, ParsedLine *line, char *error, size_t error_si
             break;
         }
 
+        // Handle stdout redirection: '>' for truncate, '>>' for append
         if (input[i] == '>') {
             if (expect_input_file || expect_output_file || command->argc == 0) {
                 set_error(error, error_size, "invalid output redirection placement");
@@ -143,6 +145,7 @@ int parse_line(const char *input, ParsedLine *line, char *error, size_t error_si
             continue;
         }
 
+        // Handle stdin redirection '<'
         if (input[i] == '<') {
             if (expect_input_file || expect_output_file || command->argc == 0) {
                 set_error(error, error_size, "invalid input redirection placement");
@@ -154,6 +157,7 @@ int parse_line(const char *input, ParsedLine *line, char *error, size_t error_si
             continue;
         }
 
+        // Pipe operator '|': advance to next command in current pipeline job
         if (input[i] == '|') {
             if (expect_input_file || expect_output_file || command->argc == 0) {
                 set_error(error, error_size, "invalid pipe placement");
@@ -173,6 +177,7 @@ int parse_line(const char *input, ParsedLine *line, char *error, size_t error_si
             continue;
         }
 
+        // Background operator '&': mark job as background and prepare next job
         if (input[i] == '&') {
             if (expect_input_file || expect_output_file || command->argc == 0) {
                 set_error(error, error_size, "invalid '&' placement");
@@ -203,22 +208,61 @@ int parse_line(const char *input, ParsedLine *line, char *error, size_t error_si
             continue;
         }
 
-        while (input[i] != '\0' && !isspace((unsigned char)input[i]) &&
-               input[i] != '>' && input[i] != '<' && input[i] != '|' &&
-               input[i] != '&') {
-            if (token_len + 1 >= sizeof(token)) {
-                set_error(error, error_size, "token is too long");
-                parsed_line_destroy(line);
-                return -1;
+        int in_quote = 0;
+        char quote_char = '\0';
+        int had_quotes = 0;
+
+        while (input[i] != '\0') {
+            char c = input[i];
+
+            if (in_quote) {
+                if (c == quote_char) {
+                    in_quote = 0;
+                    had_quotes = 1;
+                    ++i;
+                    continue;
+                }
+                if (token_len + 1 >= sizeof(token)) {
+                    set_error(error, error_size, "token is too long");
+                    parsed_line_destroy(line);
+                    return -1;
+                }
+                token[token_len++] = c;
+                ++i;
+            } else {
+                if (c == '"' || c == '\'') {
+                    in_quote = 1;
+                    quote_char = c;
+                    had_quotes = 1;
+                    ++i;
+                    continue;
+                }
+                if (isspace((unsigned char)c) || c == '>' || c == '<' || c == '|' || c == '&') {
+                    break;
+                }
+                if (token_len + 1 >= sizeof(token)) {
+                    set_error(error, error_size, "token is too long");
+                    parsed_line_destroy(line);
+                    return -1;
+                }
+                token[token_len++] = c;
+                ++i;
             }
-            token[token_len++] = input[i++];
         }
+
+        if (in_quote) {
+            set_error(error, error_size, "syntax error: unclosed quote");
+            parsed_line_destroy(line);
+            return -1;
+        }
+
         token[token_len] = '\0';
 
-        if (token_len == 0) {
+        if (token_len == 0 && !had_quotes) {
             continue;
         }
 
+        // Regular word token: route to redirection filename or add to argv
         saw_token = 1;
         if (expect_input_file) {
             if (set_filename(&command->input_file, token, error, error_size) == -1) {

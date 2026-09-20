@@ -37,6 +37,7 @@ static int open_output(const char *filename, int append)
     return fd;
 }
 
+// Set up file redirection for stdin (<) and stdout (> or >>)
 static int apply_redirections(const Command *command)
 {
     int fd;
@@ -87,6 +88,7 @@ static void child_exec_external(const Command *command)
     _exit(EXIT_FAILURE);
 }
 
+// Child process execution: handle builtins or call execvp for external program
 static void child_exec_command(const Command *command)
 {
     if (is_builtin(command)) {
@@ -133,6 +135,7 @@ static int wait_for_pid(pid_t pid)
     }
 }
 
+// Execute a single command: run foreground builtins in-process, or fork a child
 static int run_single_command(const Command *command, int background)
 {
     pid_t pid;
@@ -202,6 +205,7 @@ static int run_single_command(const Command *command, int background)
     }
 
     if (background) {
+        // Track background job in process table without waiting
         if (process_add(pid, command->argv[0]) == -1) {
             fprintf(stderr, "mysh: process table is full\n");
             if (kill(pid, SIGTERM) == -1 && errno != ESRCH) {
@@ -218,6 +222,7 @@ static int run_single_command(const Command *command, int background)
     return wait_for_pid(pid);
 }
 
+// Execute a two-command pipeline by connecting stdout of cmd 1 to stdin of cmd 2
 static int run_pipeline(const Job *job)
 {
     int pipefd[2] = {-1, -1};
@@ -325,6 +330,7 @@ static int execute_job(const Job *job)
     return run_pipeline(job);
 }
 
+// Execute each parsed job on the input line sequentially
 int execute_parsed_line(const ParsedLine *line)
 {
     int i;

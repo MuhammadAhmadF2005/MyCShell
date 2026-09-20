@@ -13,12 +13,14 @@
 static Process process_table[MAX_PROCESSES];
 static size_t process_count = 0;
 
+// Initialize process tracking table and reset count
 void process_init(void)
 {
     process_count = 0;
     memset(process_table, 0, sizeof(process_table));
 }
 
+// Register a background process in our tracking table
 int process_add(pid_t pid, const char *name)
 {
     size_t i;
@@ -44,6 +46,7 @@ int process_add(pid_t pid, const char *name)
     return 0;
 }
 
+// Remove process from table by shifting remaining entries left
 int process_remove(pid_t pid)
 {
     size_t i;
@@ -78,6 +81,7 @@ int process_find(pid_t pid, Process *out)
     return -1;
 }
 
+// Display PID and command name for all active background jobs
 void process_print(void)
 {
     size_t i;
@@ -89,6 +93,7 @@ void process_print(void)
     }
 }
 
+// Non-blocking waitpid check to clean up finished background processes
 void process_reap_finished(void)
 {
     int status;
@@ -120,6 +125,7 @@ void process_reap_finished(void)
     }
 }
 
+// Send SIGTERM and wait for all background children before exiting shell
 void process_terminate_all(void)
 {
     size_t i;

@@ -1,10 +1,109 @@
-/*
- * Minimal self-contained linenoise-compatible line editor for the assignment.
- * The shell uses only the blocking linenoise() API and history helpers.
+/* linenoise.c -- guerrilla line editing library against the idea that a
+ * line editing lib needs to be 20,000 lines of C code.
+ *
+ * You can find the latest source code at:
+ *
+ *   http://github.com/antirez/linenoise
+ *
+ * Does a number of crazy assumptions that happen to be true in 99.9999% of
+ * the 2010 UNIX computers around.
+ *
+ * ------------------------------------------------------------------------
+ *
+ * Copyright (c) 2010-2023, Salvatore Sanfilippo <antirez at gmail dot com>
+ * Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *  *  Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  *  Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ------------------------------------------------------------------------
+ *
+ * References:
+ * - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+ * - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html
+ *
+ * Todo list:
+ * - Filter bogus Ctrl+<char> combinations.
+ * - Win32 support
+ *
+ * Bloat:
+ * - History search like Ctrl+r in readline?
+ *
+ * List of escape sequences used by this program, we do everything just
+ * with three sequences. In order to be so cheap we may have some
+ * flickering effect with some slow terminal, but the lesser sequences
+ * the more compatible.
+ *
+ * EL (Erase Line)
+ *    Sequence: ESC [ n K
+ *    Effect: if n is 0 or missing, clear from cursor to end of line
+ *    Effect: if n is 1, clear from beginning of line to cursor
+ *    Effect: if n is 2, clear entire line
+ *
+ * CUF (CUrsor Forward)
+ *    Sequence: ESC [ n C
+ *    Effect: moves cursor forward n chars
+ *
+ * CUB (CUrsor Backward)
+ *    Sequence: ESC [ n D
+ *    Effect: moves cursor backward n chars
+ *
+ * The following is used to get the terminal width if getting
+ * the width with the TIOCGWINSZ ioctl fails
+ *
+ * DSR (Device Status Report)
+ *    Sequence: ESC [ 6 n
+ *    Effect: reports the current cusor position as ESC [ n ; m R
+ *            where n is the row and m is the column
+ *
+ * When multi line mode is enabled, we also use an additional escape
+ * sequence. However multi line editing is disabled by default.
+ *
+ * CUU (Cursor Up)
+ *    Sequence: ESC [ n A
+ *    Effect: moves cursor up of n chars.
+ *
+ * CUD (Cursor Down)
+ *    Sequence: ESC [ n B
+ *    Effect: moves cursor down of n chars.
+ *
+ * When linenoiseClearScreen() is called, two additional escape sequences
+ * are used in order to clear the screen and position the cursor at home
+ * position.
+ *
+ * CUP (Cursor position)
+ *    Sequence: ESC [ H
+ *    Effect: moves the cursor to upper left corner
+ *
+ * ED (Erase display)
+ *    Sequence: ESC [ 2 J
+ *    Effect: clear the whole screen
+ *
  */
 
 #define _POSIX_C_SOURCE 200809L
-
 #include "CS311_A01_2034335_linenoise.h"
 
 #include <errno.h>
@@ -33,6 +132,7 @@ static void disable_raw_mode(void)
     }
 }
 
+// Switch terminal to raw mode (disable canonical mode and echo)
 static int enable_raw_mode(void)
 {
     struct termios raw;
@@ -115,6 +215,7 @@ int linenoiseHistorySetMaxLen(int len)
     return 1;
 }
 
+// Append command line to history, ignoring consecutive duplicates
 int linenoiseHistoryAdd(const char *line)
 {
     char *copy;
@@ -172,6 +273,7 @@ static void free_history(void)
     history_cap = 0;
 }
 
+// Restore original terminal settings and free history memory at exit
 static void restore_terminal_at_exit(void)
 {
     disable_raw_mode();
@@ -195,6 +297,7 @@ static int read_byte(unsigned char *c)
     return 1;
 }
 
+// Read interactive input line, handling editing keypresses and history
 char *linenoise(const char *prompt)
 {
     char *buffer = NULL;
@@ -248,7 +351,13 @@ char *linenoise(const char *prompt)
         fputc('\n', stdout);
         return NULL;
     }
-    atexit(restore_terminal_at_exit);
+    {
+        static int atexit_registered = 0;
+        if (!atexit_registered) {
+            atexit(restore_terminal_at_exit);
+            atexit_registered = 1;
+        }
+    }
 
     while (1) {
         unsigned char c;
