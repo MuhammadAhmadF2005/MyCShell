@@ -165,4 +165,4 @@ All system call return values are checked. Errors are reported to `stderr` with 
 
 ## Acknowledgements
 
-The author thanks the CS311 course instructor for the assignment specification and for providing guidance on POSIX system programming. The linenoise library by Salvatore Sanfilippo was used for interactive line editing and command history, as required by the assignment instructions.
+The author thanks the CS311 (Operating Systems) course instructor Dr. Taj Muhammad Khan, for the assignment specification and for providing guidance on POSIX system programming. The linenoise library by Salvatore Sanfilippo was used for interactive line editing and command history, as required by the assignment instructions.
