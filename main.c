@@ -1,11 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "CS311_A01_2034335_builtins.h"
-#include "CS311_A01_2034335_linenoise.h"
+#include "builtins.h"
+#include "linenoise.h"
 
-#include "CS311_A01_2034335_parser.h"
-#include "CS311_A01_2034335_process.h"
-#include "CS311_A01_2034335_shell.h"
+#include "parser.h"
+#include "process.h"
+#include "shell.h"
 
 #include <stdio.h>
 #include <stdlib.h>

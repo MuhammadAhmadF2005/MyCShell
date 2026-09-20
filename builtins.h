@@ -1,7 +1,7 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
-#include "CS311_A01_2034335_parser.h"
+#include "parser.h"
 
 // Check if a command is an internal shell builtin (cd, pwd, ps, kill)
 int is_builtin(const Command *command);

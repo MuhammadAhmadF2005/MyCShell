@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "CS311_A01_2034335_process.h"
+#include "process.h"
 
 #include <errno.h>
 #include <signal.h>

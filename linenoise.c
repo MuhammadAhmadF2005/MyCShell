@@ -104,7 +104,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include "CS311_A01_2034335_linenoise.h"
+#include "linenoise.h"
 
 #include <errno.h>
 #include <signal.h>

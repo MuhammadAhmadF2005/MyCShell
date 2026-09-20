@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "CS311_A01_2034335_builtins.h"
-#include "CS311_A01_2034335_process.h"
+#include "builtins.h"
+#include "process.h"
 
 #include <errno.h>
 #include <limits.h>

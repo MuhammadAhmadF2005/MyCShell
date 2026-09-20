@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "CS311_A01_2034335_parser.h"
+#include "parser.h"
 
 #include <ctype.h>
 #include <stdio.h>

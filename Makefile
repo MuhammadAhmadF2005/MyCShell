@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -g
 
 TARGET = mysh
-PREFIX = CS311_A01_2034335_
+PREFIX = 
 OBJS = $(PREFIX)main.o $(PREFIX)shell.o $(PREFIX)parser.o $(PREFIX)builtins.o $(PREFIX)process.o $(PREFIX)linenoise.o
 
 .PHONY: all clean
